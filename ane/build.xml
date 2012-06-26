@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<project default="all">
+	
+	<!-- SDK properties -->
+   	<property file="build.properties"/>
+
+	<!-- Variables -->
+	<property name="FLEX_HOME" value="${SDK_HOME}"/>
+	
+	<!-- additional tasks -->
+	<taskdef resource="flexTasks.tasks" classpath="${SDK_HOME}/ant/lib/flexTasks.jar"/>
+
+	<!-- Java classpath -->
+	<path id="master-classpath">
+		<fileset dir="${ANDROID_CLASSPATH}" includes="*.jar"/>
+		<fileset dir="${SDK_HOME}/lib/android/" includes="*.jar"/>
+		<fileset dir="android/native/lib/" includes="*.jar"/>
+	</path>
+
+	<!-- Build all -->	
+	<target name="all" depends="clean,init,android_native,android_swf,default_swf,build_ane"/>
+
+	<!-- Clean all -->
+	<target name="clean">
+		<delete dir="build"/>
+		<delete dir="android/native/classes"/>
+	</target>
+	
+	<!-- Init build -->
+	<target name="init" depends="clean">
+		<mkdir dir="build"/>
+		<mkdir dir="build/Android-ARM/"/>
+		<mkdir dir="build/default"/>
+		<copy file="extension.xml" tofile="build/extension.xml" overwrite="yes"/>
+	</target>
+	
+	<!-- Android: Native -->
+	<target name="android_native">
+		<delete dir="tmp" failonerror="false"/>
+		<mkdir dir="tmp"/>
+		<mkdir dir="android/native/classes"/>
+        <javac srcdir="android/native/src" destdir="android/native/classes" includeantruntime="false">
+			<classpath refid="master-classpath"/>
+			<compilerarg value="-Xlint:deprecation"/>
+		</javac>
+		<jar destfile="tmp/FortumoExtension.jar" basedir="android/native/classes">
+			<include name="**/*.class"/>
+		</jar>
+		<copy todir="tmp">
+		  	<fileset dir="android/native/lib/"/>
+		</copy>
+		<zip destfile="build/Android-ARM/FortumoExtension.jar">
+		    <zipgroupfileset dir="tmp" includes="*.jar"/>
+		</zip>
+		<delete dir="tmp"/>
+	</target>
+	
+	<!-- Android: Create library.swf -->
+	<target name="android_swf">
+		<delete dir="tmp" failonerror="false"/>
+		<mkdir dir="tmp"/>
+        <compc debug="true" output="tmp/Extension.swc" include-classes="com.fortumo.extensions.Fortumo" swf-version="13">
+			<load-config filename="${SDK_HOME}/frameworks/air-config.xml"/>
+			<source-path path-element="android/as3"/>
+       	</compc>
+		<unzip src="tmp/Extension.swc" dest="tmp"/>
+		<copy file="tmp/library.swf" tofile="build/Android-ARM/library.swf"/>
+		<delete dir="tmp"/>
+   	</target>
+
+	<!-- default: Create library.swf -->
+	<target name="default_swf">
+		<delete dir="tmp" failonerror="false"/>
+		<mkdir dir="tmp"/>
+        <compc debug="true" output="tmp/Extension.swc" include-classes="com.fortumo.extensions.Fortumo" swf-version="13">
+			<load-config filename="${SDK_HOME}/frameworks/air-config.xml"/>
+			<source-path path-element="default/as3"/>
+       	</compc>
+		<copy file="tmp/Extension.swc" tofile="build/FortumoExtension.swc"/>
+		<unzip src="tmp/Extension.swc" dest="tmp"/>
+		<copy file="tmp/library.swf" tofile="build/default/library.swf"/>
+		<delete dir="tmp"/>
+   	</target>
+
+	<!-- Build ANE -->
+	<target name="build_ane">
+		<java jar="${SDK_HOME}/lib/adt.jar" dir="build" fork="true" failonerror="true">
+			<arg value="-package"/>
+			<arg value="-target"/>
+			<arg value="ane"/>
+			<arg value="FortumoExtension.ane"/>
+			<arg value="extension.xml"/>
+			<arg value="-swc"/>
+			<arg value="FortumoExtension.swc"/>
+			<arg value="-platform"/>
+			<arg value="Android-ARM"/>
+			<arg value="-C"/>
+			<arg value="Android-ARM/"/>
+			<arg value="."/>
+			<arg value="-platform"/>
+	        <arg value="default"/>
+            <arg value="-C"/>
+            <arg value="default/"/>
+            <arg value="."/>
+		</java>
+		<copy file="build/FortumoExtension.ane" tofile="../demo/ext/FortumoExtension.ane" overwrite="yes"/>
+	</target>
+	
+</project>

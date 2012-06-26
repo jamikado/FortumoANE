@@ -1,0 +1,15 @@
+<extension xmlns="http://ns.adobe.com/air/extension/2.5">
+	<id>com.fortumo.extension</id>
+	<versionNumber>1</versionNumber>
+	<platforms>
+		<platform name="Android-ARM">
+			<applicationDeployment>			
+				<nativeLibrary>FortumoExtension.jar</nativeLibrary>
+				<initializer>com.fortumo.android.extension.Extension</initializer>
+			</applicationDeployment>
+		</platform>
+		<platform name="default">
+			<applicationDeployment/>			
+		</platform>
+	</platforms>
+</extension>
